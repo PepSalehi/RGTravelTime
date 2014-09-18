@@ -10,6 +10,7 @@ library(ggmap)
 library(plyr)
 library(rgdal)
 
+
 # Relative paths will work if running from a shell using Rscript, or
 # if sourced in RStudio, loading the project file. Otherwise, you may
 # need to set the working directory to this folder. See setwd().
@@ -17,6 +18,11 @@ library(rgdal)
 # Input file is a shape file with the locations of the zone centroids
 shapefileloc <- "./resources" # folder, no trailing slash
 layername <- "zone" # corresponds to zone.shp
+
+# what if you want to look at one zone (generalize this out to many later)
+# also this is hard-codey
+origin_zone <- 899
+destination_zone <- 1567
 
 # Output is a csv with a list of randomly selected origins and destinations 
 # and their travel times
@@ -58,3 +64,15 @@ google_results <- rbind.fill(
 results <- cbind(OID=inputdf$OID, DID=inputdf$DID, google_results)
 
 write.csv(results, outputmat, row.names=FALSE)
+
+coords_ex_o <- coords[coords$id==origin_zone,]
+coords_ex_d <- coords[coords$id==destination_zone,]
+
+
+exdf <- cbind(coords_ex_o, coords_ex_d)
+names(exdf) <- c("OID", "OCoords", "DID", "DCoords")
+row.names(exdf) <- NULL
+
+google_results_ex <- rbind.fill(
+  apply(subset(exdf, select=c("OCoords", "DCoords")), 1,
+        function(x) mapdist(x[1], x[2], mode="driving")))
